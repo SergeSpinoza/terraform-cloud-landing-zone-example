@@ -1,0 +1,20 @@
+# Conf files #
+###################
+variables.json
+credentials.yml
+*.tfvars
+*.tfstate
+*.tfstate.*.backup
+*.tfstate.backup
+.terraform/
+*.swp
+*.retry
+vault.key
+*.log
+ansible.cfg
+.DS_Store
+~$*
+
+# JSON files for serviceAccount on GCP
+landing-zone-service-account.json
+

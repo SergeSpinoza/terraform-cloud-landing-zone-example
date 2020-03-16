@@ -1,0 +1,70 @@
+image: alpine:latest
+
+
+stages:
+  - tf_validate
+  - tf_plan
+  - tf_apply
+
+variables:
+  DOCKER_TLS_CERTDIR: ""
+  DOCKER_DRIVER: overlay2
+
+job_tf_validate:
+  image:
+    name: hashicorp/terraform:0.12.23
+    entrypoint:
+      - '/usr/bin/env'
+      - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+  stage: tf_validate
+  script:
+    - terraform validate
+  only:
+    refs:
+      - master
+  allow_failure: false 
+
+job_tf_plan:
+  image:
+    name: hashicorp/terraform:0.12.23
+    entrypoint:
+      - '/usr/bin/env'
+      - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+  stage: tf_plan
+  script:
+    - terraform plan
+  only:
+    refs:
+      - master
+  allow_failure: false 
+
+job_tf_apply:
+  image:
+    name: hashicorp/terraform:0.12.23
+    entrypoint:
+      - '/usr/bin/env'
+      - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+  stage: tf_apply
+  environment:
+    name: prod
+  script:
+    - terraform apply -input=false -auto-approve
+  only:
+    refs:
+      - master
+  when: manual
+
+
+before_script:
+  - rm -rf .terraform
+  - terraform --version
+  - mkdir -p /creds
+  - echo $GCP_SERVICEACCOUNT > /creds/credentials.json
+  - export GOOGLE_BACKEND_CREDENTIALS=/creds/credentials.json
+  - export GOOGLE_CREDENTIALS=/creds/credentials.json
+  - cd landing_zone/prod/
+  - echo 'project = "landing-zone-core"' > ./terraform.tfvars
+  - echo 'region  = "europe-west1"' >> ./terraform.tfvars
+  - terraform init
+
+
